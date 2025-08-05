@@ -22,8 +22,8 @@ This project is a simple web server written in Go. It demonstrates structured lo
 
 1. **Clone the repository:**
    ```sh
-   git clone <your-repo-url>
-   cd <project-directory>
+   git clone https://github.com/leBruchette/go-simple-server.git
+   cd go-simple-server
    ```
 
 2. **Install dependencies:**
