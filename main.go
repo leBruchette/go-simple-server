@@ -80,6 +80,7 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
 	response := map[string]interface{}{
+		"ip":          r.RemoteAddr,
 		"message":     "GET request received successfully",
 		"path":        r.URL.Path,
 		"query":       r.URL.Query(),
@@ -119,8 +120,10 @@ func handlePost(w http.ResponseWriter, r *http.Request) {
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
 	response := map[string]interface{}{
+		"ip":           r.RemoteAddr,
 		"message":      "POST request received successfully",
 		"path":         r.URL.Path,
+		"body":         string(bodyBytes),
 		"body_length":  len(bodyBytes),
 		"content_type": r.Header.Get("Content-Type"),
 		"status_code":  http.StatusOK,
@@ -142,9 +145,11 @@ func buildErrorResponse(w http.ResponseWriter) {
 // healthCheck handles health check endpoint
 func healthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	response := map[string]string{
-		"status": "healthy",
-		"time":   time.Now().Format(time.RFC3339),
+	response := map[string]any{
+		"ip":          r.RemoteAddr,
+		"healthy":     "true",
+		"time":        time.Now().Format(time.RFC3339),
+		"status_code": http.StatusOK,
 	}
 	json.NewEncoder(w).Encode(response)
 }
