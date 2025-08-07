@@ -70,7 +70,7 @@ func logRequest(r *http.Request, body interface{}) {
 func handleGet(w http.ResponseWriter, r *http.Request) {
 	// Only allow GET method
 	if r.Method != http.MethodGet {
-		buildErrorResponse(w)
+		buildErrorResponse(w, r)
 		return
 	}
 
@@ -81,10 +81,13 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	response := map[string]interface{}{
 		"ip":          r.RemoteAddr,
-		"message":     "GET request received successfully",
 		"path":        r.URL.Path,
-		"query":       r.URL.Query(),
 		"status_code": http.StatusOK,
+		"message":     "GET request received successfully",
+	}
+
+	if len(r.URL.Query()) > 0 {
+		response["query_params"] = r.URL.Query()
 	}
 
 	json.NewEncoder(w).Encode(response)
@@ -94,7 +97,7 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 func handlePost(w http.ResponseWriter, r *http.Request) {
 	// Only allow POST method
 	if r.Method != http.MethodPost {
-		buildErrorResponse(w)
+		buildErrorResponse(w, r)
 		return
 	}
 	// Read the request body
@@ -121,21 +124,25 @@ func handlePost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	response := map[string]interface{}{
 		"ip":           r.RemoteAddr,
-		"message":      "POST request received successfully",
 		"path":         r.URL.Path,
-		"body":         string(bodyBytes),
-		"body_length":  len(bodyBytes),
-		"content_type": r.Header.Get("Content-Type"),
 		"status_code":  http.StatusOK,
+		"message":      "POST request received successfully",
+		"content_type": r.Header.Get("Content-Type"),
+	}
+
+	if len(bodyBytes) > 0 {
+		response["body_length"] = len(bodyBytes)
+		response["body"] = string(bodyBytes)
 	}
 
 	json.NewEncoder(w).Encode(response)
 }
 
-func buildErrorResponse(w http.ResponseWriter) {
+func buildErrorResponse(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusMethodNotAllowed)
 	response := map[string]interface{}{
+		"ip":          r.RemoteAddr,
 		"error":       "Method Not Allowed",
 		"status_code": http.StatusMethodNotAllowed,
 	}
