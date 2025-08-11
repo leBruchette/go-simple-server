@@ -48,7 +48,7 @@ func logRequest(r *http.Request, body interface{}) {
 		Timestamp:   currentTime.Format(time.RFC3339),
 		Method:      r.Method,
 		Path:        r.URL.Path,
-		IP:          getForwardedForIp(r),
+		IP:          getOriginProxy(r),
 		Headers:     headers,
 		QueryParams: queryParams,
 		Body:        body,
@@ -80,7 +80,7 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
 	response := map[string]interface{}{
-		"ip":          getForwardedForIp(r),
+		"ip":          getOriginProxy(r),
 		"path":        r.URL.Path,
 		"status_code": http.StatusOK,
 		"message":     "GET request received successfully",
@@ -123,7 +123,7 @@ func handlePost(w http.ResponseWriter, r *http.Request) {
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
 	response := map[string]interface{}{
-		"ip":           getForwardedForIp(r),
+		"ip":           getOriginProxy(r),
 		"path":         r.URL.Path,
 		"status_code":  http.StatusOK,
 		"message":      "POST request received successfully",
@@ -142,7 +142,7 @@ func buildErrorResponse(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusMethodNotAllowed)
 	response := map[string]interface{}{
-		"ip":          getForwardedForIp(r),
+		"ip":          getOriginProxy(r),
 		"error":       "Method Not Allowed",
 		"status_code": http.StatusMethodNotAllowed,
 	}
@@ -153,7 +153,7 @@ func buildErrorResponse(w http.ResponseWriter, r *http.Request) {
 func healthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	response := map[string]any{
-		"ip":          getForwardedForIp(r),
+		"ip":          getOriginProxy(r),
 		"healthy":     "true",
 		"time":        time.Now().Format(time.RFC3339),
 		"status_code": http.StatusOK,
@@ -161,8 +161,8 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func getForwardedForIp(r *http.Request) string {
-	ip := r.Header.Get("X-Forwarded-For")
+func getOriginProxy(r *http.Request) string {
+	ip := r.Header.Get("X-Origin-Proxy")
 	if ip == "" {
 		ip = r.RemoteAddr
 	}
