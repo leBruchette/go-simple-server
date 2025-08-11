@@ -48,7 +48,7 @@ func logRequest(r *http.Request, body interface{}) {
 		Timestamp:   currentTime.Format(time.RFC3339),
 		Method:      r.Method,
 		Path:        r.URL.Path,
-		IP:          r.RemoteAddr,
+		IP:          getForwardedForIp(r),
 		Headers:     headers,
 		QueryParams: queryParams,
 		Body:        body,
@@ -80,7 +80,7 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
 	response := map[string]interface{}{
-		"ip":          r.RemoteAddr,
+		"ip":          getForwardedForIp(r),
 		"path":        r.URL.Path,
 		"status_code": http.StatusOK,
 		"message":     "GET request received successfully",
@@ -123,7 +123,7 @@ func handlePost(w http.ResponseWriter, r *http.Request) {
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
 	response := map[string]interface{}{
-		"ip":           r.RemoteAddr,
+		"ip":           getForwardedForIp(r),
 		"path":         r.URL.Path,
 		"status_code":  http.StatusOK,
 		"message":      "POST request received successfully",
@@ -142,7 +142,7 @@ func buildErrorResponse(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusMethodNotAllowed)
 	response := map[string]interface{}{
-		"ip":          r.RemoteAddr,
+		"ip":          getForwardedForIp(r),
 		"error":       "Method Not Allowed",
 		"status_code": http.StatusMethodNotAllowed,
 	}
@@ -153,12 +153,20 @@ func buildErrorResponse(w http.ResponseWriter, r *http.Request) {
 func healthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	response := map[string]any{
-		"ip":          r.RemoteAddr,
+		"ip":          getForwardedForIp(r),
 		"healthy":     "true",
 		"time":        time.Now().Format(time.RFC3339),
 		"status_code": http.StatusOK,
 	}
 	json.NewEncoder(w).Encode(response)
+}
+
+func getForwardedForIp(r *http.Request) string {
+	ip := r.Header.Get("X-Forwarded-For")
+	if ip == "" {
+		ip = r.RemoteAddr
+	}
+	return ip
 }
 
 func main() {
